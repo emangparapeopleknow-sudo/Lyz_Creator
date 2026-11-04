@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Creator Web - Lyz App</title>
+<style>
+    :root {
+        --bg: #0a0c10; --panel: #12151c; --panel2: #1a1f2b; --line: #232a38;
+        --text: #d8dde8; --text-dim: #7b8497; --accent: #e6b450; --cursor: #5fb8ff; --danger: #f87171; --ok: #4ade80;
+    }
+    * { box-sizing: border-box; }
+    body {
+        background: radial-gradient(circle at top, #1a2436 0%, #0a0c10 100%);
+        color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif;
+        margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh;
+    }
+    .container { width: 100%; max-width: 900px; display: flex; flex-direction: column; align-items: center; }
+    
+    .btn { padding: 15px 25px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.2s; text-align: center;}
+    .btn-primary { background: var(--accent); color: #000; }
+    .btn-blue { background: var(--cursor); color: #000; }
+    .btn-outline { background: transparent; border: 1px solid var(--cursor); color: var(--cursor); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Header & Nav */
+    .header { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 30px; }
+    .header h1 { color: var(--accent); margin: 0; font-size: 28px; }
+    .nav-buttons { display: flex; gap: 10px; }
+    .status-pro { background: var(--panel2); padding: 8px 15px; border-radius: 20px; border: 1px solid var(--accent); color: var(--accent); font-weight: bold; font-size: 14px;}
+
+    /* Hero */
+    .hero { text-align: center; margin-bottom: 40px; margin-top: 20px; }
+    .hero h2 { font-size: 32px; color: var(--text); margin-bottom: 10px; }
+    
+    /* Tab System */
+    .tab-content { display: none; width: 100%; }
+    .tab-content.active { display: block; }
+
+    /* Card Subscription */
+    .pricing-container { display: flex; gap: 20px; width: 100%; flex-wrap: wrap; justify-content: center; margin-bottom: 50px; }
+    .card-price { 
+        background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 30px; 
+        flex: 1; min-width: 250px; text-align: center; transition: 0.3s;
+    }
+    .card-price h3 { font-size: 22px; margin-bottom: 10px; color: var(--cursor); }
+    .card-price .price { font-size: 28px; font-weight: bold; color: var(--accent); margin-bottom: 20px; }
+    .card-price ul { list-style: none; padding: 0; text-align: left; margin-bottom: 25px; font-size: 14px; }
+    .card-price ul li { margin-bottom: 10px; color: var(--text); }
+    .card-price ul li::before { content: '✅ '; color: var(--ok); }
+
+    /* Kotak Masuk */
+    .inbox-container { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 30px; width: 100%; min-height: 300px; }
+    .inbox-item { background: var(--panel2); border: 1px solid var(--line); padding: 20px; border-radius: 12px; margin-bottom: 15px; border-left: 4px solid var(--ok); }
+    .inbox-item h4 { color: var(--ok); margin-bottom: 5px; font-size: 18px; }
+    .inbox-item p { color: var(--text-dim); font-size: 14px; margin-bottom: 10px; }
+    .inbox-code { background: #000; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 18px; color: var(--accent); text-align: center; letter-spacing: 2px; font-weight: bold; }
+    .empty-inbox { text-align: center; color: var(--text-dim); margin-top: 100px; }
+
+    /* Modal Pembayaran QRIS */
+    #payment-modal {
+        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.9); justify-content: center; align-items: center; z-index: 1000;
+    }
+    .modal-content { background: var(--panel); padding: 30px; border-radius: 16px; border: 1px solid var(--accent); text-align: center; max-width: 400px; width: 90%; }
+    .modal-content img { width: 200px; height: 200px; background: #fff; padding: 10px; border-radius: 10px; margin-bottom: 15px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <!-- HEADER -->
+    <div class="header">
+        <h1>Creator Web</h1>
+        <div class="nav-buttons">
+            <button class="btn btn-outline" onclick="switchTab('home')">Home</button>
+            <button class="btn btn-outline" onclick="switchTab('inbox')">📬 Kotak Masuk</button>
+            <button class="btn btn-outline" onclick="window.location.href='index.html'">← Ngetik</button>
+        </div>
+    </div>
+
+    <!-- TAB HOME (Langganan) -->
+    <div id="tab-home" class="tab-content active">
+        <div class="hero">
+            <h2>Bikin Web Impianmu Pakai AI</h2>
+            <p style="color: var(--text-dim);">Pilih paket langganan dan bayar via QRIS.</p>
+            <div id="user-status-home" class="status-pro" style="margin-top: 15px;">Status: Free User</div>
+        </div>
+
+        <div class="pricing-container">
+            <div class="card-price">
+                <h3>Premium</h3>
+                <div class="price">Rp 5.000 <span style="font-size:14px; font-weight:normal;">/bulan</span></div>
+                <button class="btn btn-primary" style="width: 100%;" onclick="bukaPembayaran('Premium')">Bayar Premium</button>
+            </div>
+            <div class="card-price" style="border-color: var(--cursor);">
+                <h3>VIP</h3>
+                <div class="price">Rp 12.000 <span style="font-size:14px; font-weight:normal;">/bulan</span></div>
+                <button class="btn btn-blue" style="width: 100%;" onclick="bukaPembayaran('VIP')">Bayar VIP</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB KOTAK MASUK -->
+    <div id="tab-inbox" class="tab-content">
+        <h2 style="margin-bottom: 20px; color: var(--text);">Kotak Masuk</h2>
+        <div class="inbox-container" id="inbox-list">
+            <!-- Pesan bakal muncul di sini -->
+        </div>
+    </div>
+</div>
+
+<!-- MODAL BAYAR -->
+<div id="payment-modal">
+    <div class="modal-content">
+        <h3 id="modal-title" style="color: var(--accent); margin-bottom: 15px;">Scan QRIS</h3>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg" alt="QRIS">
+        <p id="modal-desc" style="color: var(--text-dim); font-size: 14px; margin-bottom: 20px;">Klik tombol di bawah kalau lu udah bayar. (Simulasi)</p>
+        
+        <button class="btn btn-primary" id="btn-bayar" style="width: 100%;" onclick="konfirmasiPembayaran()">Saya Sudah Bayar</button>
+        <button class="btn btn-outline" style="width: 100%; margin-top: 10px;" onclick="tutupModal()">Batal</button>
+    </div>
+</div>
+
+<script>
+    // --- 1. KONFIGURASI API (GANTI KALAU LINK SSH NYA MATI) ---
+    const API_URL = "https://7465a659cb0681.lhr.life"; 
+    const USERNAME = "Bily"; // Nanti lu bisa ganti pake sistem login
+
+    // --- 2. SISTEM NAVIGASI TAB ---
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.getElementById('tab-' + tabName).classList.add('active');
+        
+        if(tabName === 'inbox') renderInbox();
+    }
+
+    // --- 3. MODAL PEMBAYARAN ---
+    let paketDipilih = "";
+    
+    function bukaPembayaran(paket) {
+        paketDipilih = paket;
+        document.getElementById('payment-modal').style.display = 'flex';
+        document.getElementById('modal-title').innerText = "Pembayaran " + paket;
+    }
+
+    function tutupModal() {
+        document.getElementById('payment-modal').style.display = 'none';
+    }
+
+    // --- 4. NEMBAK API NODE.JS (PROSES BAYAR) ---
+    async function konfirmasiPembayaran() {
+        const btn = document.getElementById('btn-bayar');
+        btn.innerText = "Memproses...";
+        btn.disabled = true;
+
+        try {
+            // Nembak ke Server Termux lu!
+            const response = await fetch(`${API_URL}/api/bayar`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: USERNAME, paket: paketDipilih })
+            });
+
+            const result = await response.json();
+
+            if (result.sukses) {
+                // Simpan kode dari server ke Ingatan HP (LocalStorage)
+                let riwayat = JSON.parse(localStorage.getItem('riwayatPembelian')) || [];
+                riwayat.push({
+                    tanggal: new Date().toLocaleString(),
+                    paket: paketDipilih,
+                    kode: result.kode,
+                    status: "Sukses"
+                });
+                localStorage.setItem('riwayatPembelian', JSON.stringify(riwayat));
+
+                tutupModal();
+                alert(`Pembayaran Sukses!\nServer ngasih kode: ${result.kode}\nCek di Kotak Masuk.`);
+                switchTab('inbox');
+            } else {
+                alert("Gagal: " + result.pesan);
+            }
+
+        } catch (error) {
+            alert("Gagal konek ke server Node.js lu. Pastiin Termux nyala dan link SSH-nya bener.\n\nError: " + error.message);
+        } finally {
+            btn.innerText = "Saya Sudah Bayar";
+            btn.disabled = false;
+        }
+    }
+
+    // --- 5. RENDER KOTAK MASUK & AKTIVASI ---
+    function renderInbox() {
+        const inbox = document.getElementById('inbox-list');
+        let riwayat = JSON.parse(localStorage.getItem('riwayatPembelian')) || [];
+
+        if (riwayat.length === 0) {
+            inbox.innerHTML = '<div class="empty-inbox">Belum ada pesan masuk.<br>Silakan beli paket dulu di Home.</div>';
+            return;
+        }
+
+        inbox.innerHTML = '';
+        riwayat.forEach((data, index) => {
+            inbox.innerHTML += `
+                <div class="inbox-item">
+                    <h4>Pembayaran ${data.paket} - ${data.status}</h4>
+                    <p>Tanggal: ${data.tanggal}</p>
+                    <p style="margin-bottom: 10px;">Kode aktivasi dari Server:</p>
+                    <div class="inbox-code">${data.kode}</div>
+                    <button class="btn btn-primary" style="margin-top: 15px; padding: 10px;" onclick="aktifkanAkun('${data.kode}', '${data.paket}', ${index})">Aktifkan Sekarang</button>
+                </div>
+            `;
+        });
+    }
+
+    function aktifkanAkun(kode, paket, index) {
+        // 1. Ubah status user di localStorage
+        localStorage.setItem('statusCreator', paket);
+        
+        // 2. Hapus pesan dari kotak masuk karena udah dipake
+        let riwayat = JSON.parse(localStorage.getItem('riwayatPembelian')) || [];
+        riwayat.splice(index, 1);
+        localStorage.setItem('riwayatPembelian', JSON.stringify(riwayat));
+
+        alert("BERHASIL! Status akun lu sekarang: " + paket);
+        updateStatusUI();
+        renderInbox();
+    }
+
+    // --- 6. UPDATE UI STATUS ---
+    function updateStatusUI() {
+        let statusAktif = localStorage.getItem('statusCreator') || 'Free User';
+        let el = document.getElementById('user-status-home');
+        
+        el.innerText = "Status: " + statusAktif;
+        if (statusAktif !== 'Free User') {
+            el.style.borderColor = "var(--ok)";
+            el.style.color = "var(--ok)";
+        }
+    }
+
+    // Jalanin pas web dibuka
+    updateStatusUI();
+</script>
+</body>
+</html>
